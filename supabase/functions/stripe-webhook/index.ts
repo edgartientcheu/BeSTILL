@@ -9,7 +9,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import Stripe from 'npm:stripe@23.0.0';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, { httpClient: Stripe.createFetchHttpClient() });
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 type AppStatus = 'none' | 'trialing' | 'active' | 'past_due' | 'canceled';
@@ -40,7 +39,7 @@ function periodEnd(sub: Stripe.Subscription): string | null {
  * Re-reads the customer's subscriptions from Stripe rather than trusting one event,
  * so events arriving late or out of order can never leave the wrong status behind.
  */
-async function syncCustomer(customerId: string, userIdHint?: string | null) {
+async function syncCustomer(stripe: Stripe, customerId: string, userIdHint?: string | null) {
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
     auth: { persistSession: false },
   });
@@ -78,12 +77,20 @@ Deno.serve(async (req) => {
   const signature = req.headers.get('Stripe-Signature');
   if (!signature) return new Response('Missing signature', { status: 400 });
 
+  const secretKey = Deno.env.get('STRIPE_SECRET_KEY');
+  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+  if (!secretKey || !webhookSecret) {
+    console.error('STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET is not set');
+    return new Response('Not configured', { status: 500 }); // Stripe will retry once secrets are added
+  }
+  const stripe = new Stripe(secretKey, { httpClient: Stripe.createFetchHttpClient() });
+
   let event: Stripe.Event;
   try {
     event = await stripe.webhooks.constructEventAsync(
       await req.text(),
       signature,
-      Deno.env.get('STRIPE_WEBHOOK_SECRET')!,
+      webhookSecret,
       undefined,
       cryptoProvider,
     );
@@ -97,7 +104,7 @@ Deno.serve(async (req) => {
       case 'checkout.session.completed': {
         const session = event.data.object;
         if (session.mode === 'subscription' && typeof session.customer === 'string') {
-          await syncCustomer(session.customer, session.client_reference_id);
+          await syncCustomer(stripe, session.customer, session.client_reference_id);
         }
         break;
       }
@@ -108,7 +115,7 @@ Deno.serve(async (req) => {
       case 'customer.subscription.resumed': {
         const sub = event.data.object;
         const customer = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
-        await syncCustomer(customer, sub.metadata?.user_id);
+        await syncCustomer(stripe, customer, sub.metadata?.user_id);
         break;
       }
       default:
