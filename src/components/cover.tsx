@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
 import type { CategoryId, Track } from '@/data/tracks';
+import { coverUrl } from '@/lib/supabase';
 
 /** Soft two-tone gradients used until real cover art is uploaded. */
 const GRADIENTS: Record<CategoryId, [string, string]> = {
@@ -16,8 +17,9 @@ const GRADIENTS: Record<CategoryId, [string, string]> = {
 
 export function Cover({ track, size, radius = 16 }: { track: Track; size: number; radius?: number }) {
   const box = { width: size, height: size, borderRadius: radius };
-  if (track.cover_path) {
-    return <Image source={{ uri: track.cover_path }} style={box} contentFit="cover" accessible={false} />;
+  const uri = coverUrl(track.cover_path);
+  if (uri) {
+    return <Image source={{ uri }} style={box} contentFit="cover" accessible={false} />;
   }
   return (
     <LinearGradient colors={GRADIENTS[track.category]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={box}>

@@ -13,15 +13,20 @@ import { Screen } from '@/components/screen';
 import { SeekBar } from '@/components/seek-bar';
 import { SleepTimer } from '@/components/sleep-timer';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { ARTIST_NAME, getTrack, type Track } from '@/data/tracks';
+import { LibraryState } from '@/components/library-state';
+import { ARTIST_NAME, type Track } from '@/data/tracks';
 import { useTheme } from '@/hooks/use-theme';
 import { useFavourites } from '@/lib/favourites';
 import { usePlayer } from '@/lib/player';
-import { canPlay } from '@/lib/subscription';
+import { useAuth } from '@/lib/auth';
+import { useLibrary } from '@/lib/library';
+import { useSubscription } from '@/lib/subscription';
 
 export default function PlayerScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const track = getTrack(id);
+  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { bySlug, loading, error } = useLibrary();
+  const { canPlay } = useSubscription();
+  const track = bySlug(slug);
   const theme = useTheme();
   const { width, height } = useWindowDimensions();
   const coverSize = Math.min(Math.min(width, MaxContentWidth) - Spacing.lg * 2, height * 0.36, 320);
@@ -32,7 +37,9 @@ export default function PlayerScreen() {
       <IconButton label="Close player" onPress={close} style={styles.close}>
         <Ionicons name="chevron-down" size={28} color={theme.textSecondary} />
       </IconButton>
-      {!track ? (
+      {loading || error ? (
+        <LibraryState />
+      ) : !track ? (
         <ComingSoon title="Not found" note="We couldn't find that track." />
       ) : (
         <>
@@ -133,6 +140,7 @@ function Controls({ track }: { track: Track }) {
 }
 
 function Locked({ track }: { track: Track }) {
+  const { user } = useAuth();
   return (
     <View style={styles.locked}>
       <AppText secondary style={styles.center}>
@@ -140,6 +148,13 @@ function Locked({ track }: { track: Track }) {
       </AppText>
       <AppText style={styles.center}>This piece is part of the full library.</AppText>
       <Button label="Unlock the full library" icon="unlock" onPress={() => router.push('/paywall')} />
+      {user ? null : (
+        <Button
+          label="Already a member? Sign in"
+          variant="quiet"
+          onPress={() => router.push({ pathname: '/auth', params: { next: `/player/${track.slug}` } })}
+        />
+      )}
     </View>
   );
 }

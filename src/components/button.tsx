@@ -21,7 +21,7 @@ export function Button({ label, icon, variant = 'primary', style, ...rest }: Pro
       accessibilityLabel={label}
       style={(state) => [
         styles.base,
-        { backgroundColor: bg, opacity: state.pressed ? 0.8 : 1 },
+        { backgroundColor: bg, opacity: rest.disabled ? 0.5 : state.pressed ? 0.8 : 1 },
         typeof style === 'function' ? style(state) : style,
       ]}
       {...rest}>

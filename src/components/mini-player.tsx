@@ -23,7 +23,7 @@ export function MiniPlayer() {
       <Pressable
         role="link"
         accessibilityLabel={`Now playing: ${track.title}. Open player`}
-        onPress={() => router.push({ pathname: '/player/[id]', params: { id: track.id } })}
+        onPress={() => router.push({ pathname: '/player/[slug]', params: { slug: track.slug } })}
         style={styles.info}>
         <Cover track={track} size={40} radius={Radius.sm} />
         <View style={styles.text}>

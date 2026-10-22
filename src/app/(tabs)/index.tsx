@@ -7,11 +7,13 @@ import { CategoryChips } from '@/components/category-chips';
 import { Screen } from '@/components/screen';
 import { TrackCard } from '@/components/track-card';
 import { Spacing } from '@/constants/theme';
-import { getTracks } from '@/data/tracks';
-import { canPlay } from '@/lib/subscription';
+import { LibraryState } from '@/components/library-state';
+import { useLibrary } from '@/lib/library';
+import { useSubscription } from '@/lib/subscription';
 
 export default function HomeScreen() {
-  const tracks = getTracks();
+  const { tracks } = useLibrary();
+  const { canPlay } = useSubscription();
   const firstFree = tracks.find((t) => t.is_free);
 
   return (
@@ -29,13 +31,14 @@ export default function HomeScreen() {
             label="Listen Free"
             icon="play"
             style={styles.cta}
-            onPress={() => router.push({ pathname: '/player/[id]', params: { id: firstFree.id } })}
+            onPress={() => router.push({ pathname: '/player/[slug]', params: { slug: firstFree.slug } })}
           />
         ) : null}
       </View>
 
       <View style={styles.section}>
         <AppText variant="heading">Featured</AppText>
+        <LibraryState />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featured}>
           {tracks.map((t) => (
             <TrackCard key={t.id} track={t} locked={!canPlay(t)} />

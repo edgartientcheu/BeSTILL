@@ -1,10 +1,120 @@
-import { ComingSoon } from '@/components/coming-soon';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+
+import { AppText } from '@/components/app-text';
+import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
+import { Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { useAuth, type Profile } from '@/lib/auth';
+import { confirm } from '@/lib/confirm';
+import { hasActiveSubscription } from '@/lib/subscription';
 
 export default function AccountScreen() {
+  const theme = useTheme();
+  const { ready, user, profile, signOut, deleteAccount } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const active = hasActiveSubscription(profile);
+
+  if (!ready) {
+    return (
+      <Screen>
+        <ActivityIndicator color={theme.accent} style={styles.loading} />
+      </Screen>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Screen>
+        <AppText variant="title">Account</AppText>
+        <AppText secondary>
+          Sign in to keep your favourites on every device and to unlock the full piano library.
+        </AppText>
+        <Button label="Sign in or create an account" onPress={() => router.push('/auth')} />
+      </Screen>
+    );
+  }
+
+  async function onDelete() {
+    setError(null);
+    const ok = await confirm(
+      'Delete your account?',
+      'This permanently removes your account and favourites. It cannot be undone.' +
+        (active ? '\n\nPlease cancel your subscription first so you are not charged again.' : ''),
+      'Delete',
+    );
+    if (!ok) return;
+    try {
+      await deleteAccount();
+      router.replace('/');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
+    }
+  }
+
   return (
     <Screen>
-      <ComingSoon title="Account" note="Plan status, manage subscription and sign out. Arrives in steps 3 and 4." />
+      <AppText variant="title">Account</AppText>
+
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <AppText variant="caption" secondary>
+          Signed in as
+        </AppText>
+        <AppText variant="label">{user.email}</AppText>
+      </View>
+
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <AppText variant="caption" secondary>
+          Your plan
+        </AppText>
+        <AppText variant="label">{planLabel(profile)}</AppText>
+        {active ? (
+          <Button
+            label="Manage subscription"
+            variant="secondary"
+            onPress={() => router.push('/paywall')}
+            style={styles.cardButton}
+          />
+        ) : (
+          <Button label="See plans" onPress={() => router.push('/paywall')} style={styles.cardButton} />
+        )}
+      </View>
+
+      {error ? (
+        <AppText role="alert" style={{ color: theme.text }}>
+          {error}
+        </AppText>
+      ) : null}
+
+      <View style={styles.actions}>
+        <Button label="Sign out" variant="secondary" icon="log-out" onPress={signOut} />
+        <Button label="Delete account" variant="quiet" onPress={onDelete} />
+      </View>
     </Screen>
   );
 }
+
+function planLabel(profile: Profile | null): string {
+  if (!profile) return '…';
+  const until = profile.current_period_end
+    ? new Date(profile.current_period_end).toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : null;
+  if (!hasActiveSubscription(profile)) {
+    return profile.subscription_status === 'past_due' ? 'Payment needs attention' : 'Free (preview tracks)';
+  }
+  if (profile.subscription_status === 'trialing') return until ? `Free trial until ${until}` : 'Free trial';
+  return until ? `Full library · renews ${until}` : 'Full library';
+}
+
+const styles = StyleSheet.create({
+  loading: { marginTop: Spacing.xxl },
+  card: { borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.xs },
+  cardButton: { marginTop: Spacing.sm, alignSelf: 'flex-start' },
+  actions: { gap: Spacing.sm, marginTop: Spacing.md },
+});

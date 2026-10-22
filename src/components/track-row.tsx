@@ -18,7 +18,7 @@ export function TrackRow({ track, locked }: { track: Track; locked: boolean }) {
     <Pressable
       role="link"
       accessibilityLabel={a11y}
-      onPress={() => router.push({ pathname: '/player/[id]', params: { id: track.id } })}
+      onPress={() => router.push({ pathname: '/player/[slug]', params: { slug: track.slug } })}
       style={({ pressed }) => [styles.row, { backgroundColor: pressed ? theme.surfaceMuted : theme.surface }]}>
       <Cover track={track} size={56} radius={Radius.sm} />
       <View style={styles.text}>

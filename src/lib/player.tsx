@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 import { ARTIST_NAME, type Track } from '@/data/tracks';
 import { resolveAudioSource } from '@/lib/audio-source';
+import { coverUrl } from '@/lib/supabase';
 
 export const SLEEP_TIMER_MINUTES = [15, 30, 45, 60] as const;
 const FADE_MS = 20_000;
@@ -99,7 +100,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           title: next.title,
           artist: ARTIST_NAME,
           albumTitle: 'BE STILL',
-          artworkUrl: next.cover_path ?? undefined,
+          artworkUrl: coverUrl(next.cover_path) ?? undefined,
         },
         { showSeekBackward: true, showSeekForward: true },
       );

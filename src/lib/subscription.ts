@@ -1,14 +1,25 @@
+import type { Track } from '@/data/tracks';
+import { useAuth, type Profile } from '@/lib/auth';
+
 /**
- * The ONE place the app asks "is this person a subscriber?".
+ * The ONE place the app decides "is this person a subscriber?". It mirrors the
+ * `has_active_subscription` database function the server uses before handing out audio.
  *
- * Today: always false (no accounts yet).
- * Step 4: reads `profiles.subscription_status` written by the Stripe webhook.
- * Phase 2: also asks RevenueCat for Apple/Google purchases. Screens never change.
+ * `profiles.subscription_status` is written by the Stripe webhook (step 4) and, in
+ * phase 2, by RevenueCat for Apple/Google purchases. Screens never need to change.
  */
-export function hasActiveSubscription(): boolean {
-  return false;
+export function hasActiveSubscription(profile: Profile | null): boolean {
+  if (!profile) return false;
+  const live = profile.subscription_status === 'active' || profile.subscription_status === 'trialing';
+  const notExpired = !profile.current_period_end || new Date(profile.current_period_end).getTime() > Date.now();
+  return live && notExpired;
 }
 
-export function canPlay(track: { is_free: boolean }): boolean {
-  return track.is_free || hasActiveSubscription();
+export function useSubscription() {
+  const { profile } = useAuth();
+  const active = hasActiveSubscription(profile);
+  return {
+    active,
+    canPlay: (track: Pick<Track, 'is_free'>) => track.is_free || active,
+  };
 }

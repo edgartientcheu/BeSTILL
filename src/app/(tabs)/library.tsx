@@ -6,20 +6,24 @@ import { CategoryChips } from '@/components/category-chips';
 import { Screen } from '@/components/screen';
 import { TrackRow } from '@/components/track-row';
 import { Spacing } from '@/constants/theme';
-import { CATEGORIES, categoryLabel, getTracks, type CategoryId } from '@/data/tracks';
-import { canPlay } from '@/lib/subscription';
+import { LibraryState } from '@/components/library-state';
+import { CATEGORIES, categoryLabel, type CategoryId } from '@/data/tracks';
+import { useLibrary } from '@/lib/library';
+import { useSubscription } from '@/lib/subscription';
 
 export default function LibraryScreen() {
   const params = useLocalSearchParams<{ category?: string }>();
   const category = CATEGORIES.some((c) => c.id === params.category) ? (params.category as CategoryId) : undefined;
-  const tracks = getTracks(category);
+  const { tracks, loading, error } = useLibrary(category);
+  const { canPlay } = useSubscription();
 
   return (
     <Screen>
       <AppText variant="title">{category ? categoryLabel(category) : 'Library'}</AppText>
       <CategoryChips selected={category} showAll />
       <View style={styles.list}>
-        {tracks.length === 0 ? (
+        <LibraryState />
+        {loading || error ? null : tracks.length === 0 ? (
           <AppText secondary>New music for this moment is coming soon.</AppText>
         ) : (
           tracks.map((t) => <TrackRow key={t.id} track={t} locked={!canPlay(t)} />)

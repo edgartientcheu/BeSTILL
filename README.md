@@ -10,8 +10,8 @@ BE STILL is built with Expo (React Native), so one codebase runs in the web brow
 |---|---|---|
 | 1 | Project setup, design, navigation, home and library screens | ✅ Done |
 | 2 | Audio player (background play, lock-screen controls, sleep timer) | ✅ Done |
-| 3 | Supabase: database, private audio storage, sign-in | ⏳ Next |
-| 4 | Paywall and Stripe subscriptions | |
+| 3 | Supabase: database, private audio storage, sign-in | ✅ Done (see [Supabase setup](docs/SUPABASE_SETUP.md)) |
+| 4 | Paywall and Stripe subscriptions | ⏳ Next |
 | 5 | Admin upload page | |
 | 6 | Polish, legal pages, launch checklist, deploy | |
 
@@ -44,22 +44,34 @@ The five tracks in `assets/audio/` are short synthesized piano sketches (about 8
 - **One shared player** (`src/lib/player.tsx`): music keeps playing when you close the player, change tabs, lock your phone or switch to another app. A mini player above the tabs shows what's playing.
 - **Lock-screen controls**: on the web this uses the browser's Media Session feature, so the lock screen and headphone buttons show the title, "Pastor Edgar", play/pause and ±10 seconds.
 - **Sleep timer**: 15/30/45/60 minutes. The music fades out over the last 20 seconds, then pauses. *iPhone browsers don't allow websites to change volume, so there the music simply stops at the end. The iPhone app (Phase 2) will fade normally.*
-- **Favourites** are saved on this device for now. Step 3 saves them to your account.
+- **Favourites** are saved to your account when signed in (and on the device when signed out; they move into the account at sign-in).
 
 ## Secrets
 
 Keys and passwords live in a file called `.env`, which is never uploaded to GitHub. Copy `.env.example` to `.env` and fill it in when a step asks you to.
+
+Without a `.env`, the app still runs using the 5 built-in placeholder tracks (no sign-in).
+
+## Backend (Supabase)
+
+Follow **[docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)** once. In short:
+
+- `supabase/migrations/…_init.sql`: tables (`tracks`, `profiles`, `favourites`), Row Level Security on every table, the private `audio` bucket and public `covers` bucket, and the 5 placeholder tracks.
+- `supabase/functions/get-audio-url`: gives a short-lived signed link to a recording, only for free tracks or active subscribers. Paid audio never has a permanent public link.
+- `hasActiveSubscription()` in `src/lib/subscription.ts` is the single subscription check in the app; the database has a matching `has_active_subscription()` used by the server.
 
 ## Project layout (for the curious)
 
 ```
 src/app/            Screens. Each file is a page (Expo Router).
   (tabs)/           Home, Library, Favourites, Account
-  player/[id].tsx   The player
+  player/[slug].tsx The player
   paywall.tsx       Subscription screen
   auth.tsx          Sign-in screen
 src/components/     Reusable pieces (buttons, cover art, track rows)
 src/constants/      Colours, spacing, fonts
-src/data/tracks.ts  Track list (placeholders until Supabase is connected)
+src/data/tracks.ts  Track type and built-in placeholder tracks
+supabase/           Database setup (SQL) and the get-audio-url server function
+docs/               Setup guides
 src/lib/            App logic, including hasActiveSubscription()
 ```

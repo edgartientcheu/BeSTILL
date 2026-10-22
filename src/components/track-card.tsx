@@ -16,7 +16,7 @@ export function TrackCard({ track, locked }: { track: Track; locked: boolean }) 
   return (
     <Pressable
       role="link"
-      onPress={() => router.push({ pathname: '/player/[id]', params: { id: track.id } })}
+      onPress={() => router.push({ pathname: '/player/[slug]', params: { slug: track.slug } })}
       accessibilityLabel={`${track.title}, ${categoryLabel(track.category)}${locked ? ', subscribers only' : ''}`}
       style={({ pressed }) => [styles.card, { opacity: pressed ? 0.85 : 1 }]}>
       <View>
