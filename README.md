@@ -9,8 +9,8 @@ BE STILL is built with Expo (React Native), so one codebase runs in the web brow
 | Step | What | Status |
 |---|---|---|
 | 1 | Project setup, design, navigation, home and library screens | ✅ Done |
-| 2 | Audio player (background play, lock-screen controls, sleep timer) | ⏳ Next |
-| 3 | Supabase: database, private audio storage, sign-in | |
+| 2 | Audio player (background play, lock-screen controls, sleep timer) | ✅ Done |
+| 3 | Supabase: database, private audio storage, sign-in | ⏳ Next |
 | 4 | Paywall and Stripe subscriptions | |
 | 5 | Admin upload page | |
 | 6 | Polish, legal pages, launch checklist, deploy | |
@@ -34,6 +34,17 @@ npm run web
 ```
 
 A browser tab opens at `http://localhost:8081`. **To try it on your phone**, connect the phone to the same Wi-Fi and open the "Network" address shown in the terminal (it looks like `http://192.168.x.x:8081`). Press `Ctrl + C` in the terminal to stop.
+
+## About the placeholder music
+
+The five tracks in `assets/audio/` are short synthesized piano sketches (about 80 seconds each) made so the player can be tested. They are **not** Pastor Edgar's recordings and will be removed once real music is uploaded (step 5).
+
+## How playback works
+
+- **One shared player** (`src/lib/player.tsx`): music keeps playing when you close the player, change tabs, lock your phone or switch to another app. A mini player above the tabs shows what's playing.
+- **Lock-screen controls**: on the web this uses the browser's Media Session feature, so the lock screen and headphone buttons show the title, "Pastor Edgar", play/pause and ±10 seconds.
+- **Sleep timer**: 15/30/45/60 minutes. The music fades out over the last 20 seconds, then pauses. *iPhone browsers don't allow websites to change volume, so there the music simply stops at the end. The iPhone app (Phase 2) will fade normally.*
+- **Favourites** are saved on this device for now. Step 3 saves them to your account.
 
 ## Secrets
 

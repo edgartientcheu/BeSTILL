@@ -3,6 +3,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+import { FavouritesProvider } from '@/lib/favourites';
+import { PlayerProvider } from '@/lib/player';
 
 export default function RootLayout() {
   const scheme = useColorScheme();
@@ -22,13 +24,17 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={navTheme}>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.background } }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="player/[id]" options={{ presentation: 'modal', title: 'Now playing' }} />
-        <Stack.Screen name="paywall" options={{ presentation: 'modal', title: 'Unlock' }} />
-        <Stack.Screen name="auth" options={{ presentation: 'modal', title: 'Sign in' }} />
-      </Stack>
+      <PlayerProvider>
+        <FavouritesProvider>
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.background } }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="player/[id]" options={{ presentation: 'modal', title: 'Now playing' }} />
+            <Stack.Screen name="paywall" options={{ presentation: 'modal', title: 'Unlock' }} />
+            <Stack.Screen name="auth" options={{ presentation: 'modal', title: 'Sign in' }} />
+          </Stack>
+        </FavouritesProvider>
+      </PlayerProvider>
     </ThemeProvider>
   );
 }

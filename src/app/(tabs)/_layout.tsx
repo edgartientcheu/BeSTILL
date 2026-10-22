@@ -1,13 +1,20 @@
 import Feather from '@expo/vector-icons/Feather';
-import { Tabs } from 'expo-router/js-tabs';
+import { BottomTabBar, Tabs } from 'expo-router/js-tabs';
 import { Platform, type ColorValue } from 'react-native';
 
+import { MiniPlayer } from '@/components/mini-player';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function TabLayout() {
   const theme = useTheme();
   return (
     <Tabs
+      tabBar={(props) => (
+        <>
+          <MiniPlayer />
+          <BottomTabBar {...props} />
+        </>
+      )}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.accent,
