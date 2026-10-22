@@ -10,6 +10,7 @@ import { useAuth, type Profile } from '@/lib/auth';
  */
 export function hasActiveSubscription(profile: Profile | null): boolean {
   if (!profile) return false;
+  if (profile.is_admin) return true; // the owner hears everything
   const live = profile.subscription_status === 'active' || profile.subscription_status === 'trialing';
   const notExpired = !profile.current_period_end || new Date(profile.current_period_end).getTime() > Date.now();
   return live && notExpired;

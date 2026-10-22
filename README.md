@@ -12,8 +12,8 @@ BE STILL is built with Expo (React Native), so one codebase runs in the web brow
 | 2 | Audio player (background play, lock-screen controls, sleep timer) | ✅ Done |
 | 3 | Supabase: database, private audio storage, sign-in | ✅ Done (see [Supabase setup](docs/SUPABASE_SETUP.md)) |
 | 4 | Paywall and Stripe subscriptions | ✅ Done (see [Stripe setup](docs/STRIPE_SETUP.md)) |
-| 5 | Admin upload page | ⏳ Next |
-| 6 | Polish, legal pages, launch checklist, deploy | |
+| 5 | Admin upload page | ✅ Done (see [Adding your music](docs/UPLOADING_MUSIC.md)) |
+| 6 | Polish, legal pages, launch checklist, deploy | ⏳ Next |
 
 ## Run it on your computer
 
@@ -37,7 +37,7 @@ A browser tab opens at `http://localhost:8081`. **To try it on your phone**, con
 
 ## About the placeholder music
 
-The five tracks in `assets/audio/` are short synthesized piano sketches (about 80 seconds each) made so the player can be tested. They are **not** Pastor Edgar's recordings and will be removed once real music is uploaded (step 5).
+The five tracks in `assets/audio/` are short synthesized piano sketches (about 80 seconds each) made so the player can be tested. They are **not** Pastor Edgar's recordings. Delete them from the upload page once real music is uploaded.
 
 ## How playback works
 
@@ -69,6 +69,7 @@ src/app/            Screens. Each file is a page (Expo Router).
   player/[slug].tsx The player
   paywall.tsx       Subscription screen
   auth.tsx          Sign-in screen
+  admin.tsx         Owner's upload page
 src/components/     Reusable pieces (buttons, cover art, track rows)
 src/constants/      Colours, spacing, fonts
 src/data/tracks.ts  Track type and built-in placeholder tracks

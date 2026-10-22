@@ -26,9 +26,10 @@ export default function AuthScreen() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const finish = () => {
-    // Only follow in-app paths, never an outside address.
-    if (next?.startsWith('/') && !next.startsWith('//')) router.replace(next as Href);
-    else if (router.canGoBack()) router.back();
+    // Return to the page that asked for sign-in. `next` is only for links opened directly
+    // (no page behind this one), and only in-app paths are followed, never an outside address.
+    if (router.canGoBack()) router.back();
+    else if (next?.startsWith('/') && !next.startsWith('//')) router.replace(next as Href);
     else router.replace('/account');
   };
 

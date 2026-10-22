@@ -9,6 +9,8 @@ export type SubscriptionStatus = 'none' | 'trialing' | 'active' | 'past_due' | '
 export type Profile = {
   subscription_status: SubscriptionStatus;
   current_period_end: string | null;
+  /** The owner: can open the upload page and hear everything. Set only from the SQL Editor. */
+  is_admin: boolean;
 };
 
 type AuthContextValue = {
@@ -58,12 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     supabase
       .from('profiles')
-      .select('subscription_status, current_period_end')
+      .select('subscription_status, current_period_end, is_admin')
       .eq('user_id', userId)
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled) return;
-        const fallback: Profile = { subscription_status: 'none', current_period_end: null };
+        const fallback: Profile = { subscription_status: 'none', current_period_end: null, is_admin: false };
         setLoaded({ userId, profile: (data as Profile | null) ?? fallback });
       });
     return () => {

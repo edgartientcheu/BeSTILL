@@ -128,6 +128,10 @@ export default function AccountScreen() {
         </AppText>
       ) : null}
 
+      {profile?.is_admin ? (
+        <Button label="Upload music" icon="upload-cloud" onPress={() => router.push('/admin')} />
+      ) : null}
+
       <View style={styles.actions}>
         <Button label="Sign out" variant="secondary" icon="log-out" onPress={signOut} />
         <Button label="Delete account" variant="quiet" onPress={onDelete} />
@@ -138,6 +142,7 @@ export default function AccountScreen() {
 
 function planLabel(profile: Profile | null): string {
   if (!profile) return '…';
+  if (profile.is_admin) return 'Owner · full access';
   const until = profile.current_period_end
     ? new Date(profile.current_period_end).toLocaleDateString(undefined, {
         day: 'numeric',
