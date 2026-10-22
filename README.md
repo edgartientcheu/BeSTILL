@@ -11,8 +11,8 @@ BE STILL is built with Expo (React Native), so one codebase runs in the web brow
 | 1 | Project setup, design, navigation, home and library screens | ✅ Done |
 | 2 | Audio player (background play, lock-screen controls, sleep timer) | ✅ Done |
 | 3 | Supabase: database, private audio storage, sign-in | ✅ Done (see [Supabase setup](docs/SUPABASE_SETUP.md)) |
-| 4 | Paywall and Stripe subscriptions | ⏳ Next |
-| 5 | Admin upload page | |
+| 4 | Paywall and Stripe subscriptions | ✅ Done (see [Stripe setup](docs/STRIPE_SETUP.md)) |
+| 5 | Admin upload page | ⏳ Next |
 | 6 | Polish, legal pages, launch checklist, deploy | |
 
 ## Run it on your computer
@@ -58,6 +58,7 @@ Follow **[docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)** once. In short:
 
 - `supabase/migrations/…_init.sql`: tables (`tracks`, `profiles`, `favourites`), Row Level Security on every table, the private `audio` bucket and public `covers` bucket, and the 5 placeholder tracks.
 - `supabase/functions/get-audio-url`: gives a short-lived signed link to a recording, only for free tracks or active subscribers. Paid audio never has a permanent public link.
+- `supabase/functions/create-checkout-session`, `create-portal-session`, `stripe-webhook`: Stripe Checkout (7-day trial for first-time subscribers), the Customer Portal, and the webhook that keeps `profiles.subscription_status` in sync. Setup: **[docs/STRIPE_SETUP.md](docs/STRIPE_SETUP.md)**.
 - `hasActiveSubscription()` in `src/lib/subscription.ts` is the single subscription check in the app; the database has a matching `has_active_subscription()` used by the server.
 
 ## Project layout (for the curious)

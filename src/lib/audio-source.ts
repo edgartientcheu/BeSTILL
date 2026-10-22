@@ -1,7 +1,7 @@
 import type { AudioSource } from 'expo-audio';
 
 import type { Track } from '@/data/tracks';
-import { supabase } from '@/lib/supabase';
+import { functionError, supabase } from '@/lib/supabase';
 
 /**
  * Short synthesized piano sketches bundled with the app so the player can be tested
@@ -27,20 +27,14 @@ export async function resolveAudioSource(track: Track): Promise<AudioSource> {
     const { data, error } = await supabase.functions.invoke<{ url: string }>('get-audio-url', {
       body: { track_id: track.id },
     });
-    if (error || !data?.url) throw new Error(await explain(error));
+    if (error || !data?.url) {
+      throw new Error(
+        await functionError(error, 'This track could not be loaded. Please check your connection and try again.'),
+      );
+    }
     return { uri: data.url };
   }
   const bundled = PLACEHOLDER_AUDIO[track.slug];
   if (bundled) return bundled;
   throw new Error('This recording is not available yet.');
-}
-
-/** Reads the friendly message the Edge Function sends back, if any. */
-async function explain(error: unknown): Promise<string> {
-  const response = (error as { context?: Response } | null)?.context;
-  if (response && typeof response.json === 'function') {
-    const body = await response.json().catch(() => null);
-    if (body?.error) return body.error;
-  }
-  return 'This track could not be loaded. Please check your connection and try again.';
 }

@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -8,14 +8,42 @@ import { Screen } from '@/components/screen';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth, type Profile } from '@/lib/auth';
+import { openSubscriptionSettings } from '@/lib/billing';
 import { confirm } from '@/lib/confirm';
 import { hasActiveSubscription } from '@/lib/subscription';
 
 export default function AccountScreen() {
   const theme = useTheme();
-  const { ready, user, profile, signOut, deleteAccount } = useAuth();
+  const { ready, user, profile, refreshProfile, signOut, deleteAccount } = useAuth();
+  const { checkout } = useLocalSearchParams<{ checkout?: string }>();
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const active = hasActiveSubscription(profile);
+  const confirming = checkout === 'success' && !active;
+
+  // Back from Stripe Checkout: Stripe's webhook usually lands within seconds, so check a few times.
+  useEffect(() => {
+    if (!confirming) return;
+    let tries = 0;
+    const handle = setInterval(() => {
+      tries += 1;
+      refreshProfile();
+      if (tries >= 15) clearInterval(handle);
+    }, 2000);
+    return () => clearInterval(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirming]);
+
+  async function manage() {
+    setError(null);
+    setBusy(true);
+    try {
+      await openSubscriptionSettings(); // leaves for Stripe
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
+      setBusy(false);
+    }
+  }
 
   if (!ready) {
     return (
@@ -58,6 +86,17 @@ export default function AccountScreen() {
     <Screen>
       <AppText variant="title">Account</AppText>
 
+      {checkout === 'success' ? (
+        <View role="status" style={[styles.card, { backgroundColor: theme.accentSoft }]}>
+          <AppText variant="label">
+            {active ? 'Welcome to the full library.' : 'Thank you! Confirming your subscription…'}
+          </AppText>
+          <AppText variant="caption" secondary>
+            {active ? 'Every piece is now unlocked. Rest well.' : 'This usually takes a few seconds.'}
+          </AppText>
+        </View>
+      ) : null}
+
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <AppText variant="caption" secondary>
           Signed in as
@@ -72,9 +111,10 @@ export default function AccountScreen() {
         <AppText variant="label">{planLabel(profile)}</AppText>
         {active ? (
           <Button
-            label="Manage subscription"
+            label={busy ? 'Opening…' : 'Manage subscription'}
             variant="secondary"
-            onPress={() => router.push('/paywall')}
+            onPress={manage}
+            disabled={busy}
             style={styles.cardButton}
           />
         ) : (

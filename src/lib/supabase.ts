@@ -24,6 +24,16 @@ export const supabase: SupabaseClient | null =
       })
     : null;
 
+/** Reads the friendly `{ error }` message an Edge Function sent back, if any. */
+export async function functionError(error: unknown, fallback: string): Promise<string> {
+  const response = (error as { context?: Response } | null)?.context;
+  if (response && typeof response.json === 'function') {
+    const body = await response.json().catch(() => null);
+    if (body?.error) return body.error;
+  }
+  return fallback;
+}
+
 /** Public web address of a cover image stored in the "covers" bucket. */
 export function coverUrl(path: string | null): string | null {
   if (!path) return null;
